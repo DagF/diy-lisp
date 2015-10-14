@@ -1,3 +1,8 @@
 *.pyc
 .vagrant/
 Vagrantfile
+.idea
+bin
+lib
+man
+
