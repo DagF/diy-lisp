@@ -12,14 +12,38 @@ understand.
 
 def parse(source):
 
-    if source == '#t':
-        return True
-    elif source == '#f':
-        return False
-    elif source.isdigit():
-        return int(source)
+    source = remove_comments(source).strip()
 
-    return source
+    if source.count("(") > source.count(")"):
+        raise LispError("Incomplete expression")
+    elif source.count("(") < source.count(")"):
+        raise LispError("Expected EOF")
+
+    parsed_surce = None
+
+    change = False
+
+
+    if source == '#t':
+        parsed_surce = True
+    elif source == '#f':
+        parsed_surce = False
+    elif source.isdigit():
+        parsed_surce = int(source)
+    elif source[0] == "(":
+        parsed_surce = split_exps(source[1:-1])
+        change = True
+    elif source[0] == "'":
+        parsed_surce = ['quote', source[1:]]
+        change = True
+    else:
+        parsed_surce = source
+
+    if change and isinstance(parsed_surce, list):
+        for i in range(0, len(parsed_surce)):
+            parsed_surce[i] = parse(parsed_surce[i])
+
+    return parsed_surce
 
 ##
 ## Below are a few useful utility functions. These should come in handy when 
