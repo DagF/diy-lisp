@@ -26,13 +26,22 @@ class Environment:
         self.bindings = variables if variables else {}
 
     def lookup(self, symbol):
-        raise NotImplementedError("DIY")
+        var = self.bindings.get(symbol)
+        if var:
+            return var
+        else:
+            raise LispError(symbol)
 
     def extend(self, variables):
-        raise NotImplementedError("DIY")
+        new_env = Environment(self.bindings.copy())
+        new_env.bindings.update(variables)
+        return new_env
 
     def set(self, symbol, value):
-        raise NotImplementedError("DIY")
+        if not self.bindings.get(symbol):
+            self.bindings[symbol] = value
+        else:
+            raise LispError("already defined")
 
 
 class String:

@@ -14,61 +14,105 @@ in a day, after all.)
 """
 
 def evaluate(ast, env):
-    if isinstance(ast, list):
-        if len(ast) > 2:
-            key, *rest = ast
+
+    if not is_list(ast):
+        if is_boolean(ast):
+            return ast
+        elif is_integer(ast):
+            return ast
         else:
-            key, rest = ast
+            return env.lookup(ast)
 
-
-        print(ast)
-        print(key)
-        print(rest)
-
-        if key == 'quote':
-            return rest
-        elif key == 'atom':
-            if is_list(rest):
-                res = evaluate(rest, env)
-                return False if is_list(res) else True
-            else:
-                return True
-
-        if is_list(rest) and len(rest) == 2:
-            value1, value2 = rest
-            if is_list(value1):
-                value1 = evaluate(value1, env)
-            if is_list(value2):
-                value2 = evaluate(value2, env)
-
-            if key == 'eq':
-                    if is_list(value1) or is_list(value2):
-                        return False
-                    return value1 == value2
-            if is_integer(value1) and is_integer(value2):
-                if key == '+':
-                    return value1 + value2
-
-                if key == '-':
-                    return value1 - value2
-
-                if key == '/':
-                    return value1 // value2
-
-                if key == '*':
-                    return value1 * value2
-
-                if key == 'mod':
-                    return value1 % value2
-
-                if key == '>':
-                    return value1 > value2
-            else:
-                raise LispError()
-
-#m", ["quote", "foo"]], Environment()))
-#    assert_equals(False, evaluate(["atom", ["quote", [1, 2]]], Environment()))
-
-
+    if len(ast) > 2:
+        key, *rest = ast
     else:
-       return ast
+        key, rest = ast
+
+
+    print(ast)
+    print(key)
+    print(rest)
+
+    if key == 'quote':
+        return rest
+    elif key == 'atom':
+        if is_list(rest):
+            res = evaluate(rest, env)
+            return False if is_list(res) else True
+        else:
+            return True
+
+    if is_list(rest) and len(rest) == 2:
+        value1, value2 = rest
+    else:
+        value1, value2 = rest, None
+    if is_list(value1):
+        value1 = evaluate(value1, env)
+    if is_list(value2):
+        value2 = evaluate(value2, env)
+
+    if key == 'eq':
+        if is_list(value1) or is_list(value2):
+            return False
+        return value1 == value2
+
+    elif key == "define":
+        if value2:
+            if isinstance(value1, str):
+                env.set(value1, value2)
+            else:
+                raise LispError("non-symbol")
+        else:
+            raise LispError("Wrong number of arguments")
+
+
+    if key == '+':
+        if is_integer(value1) and is_integer(value2):
+            return value1 + value2
+        else:
+            raise LispError
+
+    if key == '-':
+        if is_integer(value1) and is_integer(value2):
+            return value1 - value2
+        else:
+            raise LispError
+
+    if key == '/':
+        if is_integer(value1) and is_integer(value2):
+            return value1 // value2
+        else:
+            raise LispError
+
+    if key == '*':
+        if is_integer(value1) and is_integer(value2):
+            return value1 * value2
+        else:
+            raise LispError
+
+    if key == 'mod':
+        if is_integer(value1) and is_integer(value2):
+            return value1 % value2
+        else:
+            raise LispError
+
+    if key == '>':
+        if is_integer(value1) and is_integer(value2):
+            return value1 > value2
+        else:
+            raise LispError
+
+
+    if key == 'if':
+        if is_list(rest) and len(rest) == 3:
+            predicate, expresion1, expresion2 = rest
+            if evaluate(predicate, env):
+                return evaluate(expresion1, env)
+            else:
+                return evaluate(expresion2, env)
+        else:
+            raise LispError
+
+
+
+
