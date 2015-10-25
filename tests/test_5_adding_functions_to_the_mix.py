@@ -22,7 +22,6 @@ def test_lambda_evaluates_to_closure():
     closure = evaluate(ast, Environment())
     assert_is_instance(closure, Closure)
 
-
 def test_lambda_closure_keeps_defining_env():
     """The closure should keep a copy of the environment where it was defined.
 

@@ -23,15 +23,45 @@ def evaluate(ast, env):
         else:
             return env.lookup(ast)
 
+
+
     if len(ast) > 2:
         key, *rest = ast
-    else:
+    elif len(ast) == 2:
         key, rest = ast
+    else:
+        key = ast[0]
+        rest = None
 
 
     print(ast)
     print(key)
     print(rest)
+
+    """Call to function should evaluate all arguments.
+
+    When a function is applied, the arguments should be evaluated before being bound
+    to the parameter names."""
+
+    if is_closure(key):
+        closure = key
+        if len(key.params) == 0:
+            return evaluate(key.body, env)
+        else:
+            arguments = rest
+            if not len(arguments) == len(closure.params):
+                arguments = evaluate(arguments, env)
+
+            if len(arguments) == len(closure.params):
+                new_env = {}
+                for i in range(len(closure.params)):
+                    new_env[closure.params[i]] = arguments[i]
+
+                return evaluate(closure.body, closure.env.extend(new_env))
+            else:
+                raise LispError
+
+
 
     if key == 'quote':
         return rest
@@ -41,13 +71,24 @@ def evaluate(ast, env):
             return False if is_list(res) else True
         else:
             return True
+    elif key == "lambda":
+        if not len(rest) == 2:
+            raise LispError("number of arguments")
+        params, body = rest
+        return Closure(env,params,body)
+        #return evaluate(fun.body, env)
 
     if is_list(rest) and len(rest) == 2:
         value1, value2 = rest
+        value1 = evaluate(value1, env)
+        value2 = evaluate(value2, env)
     else:
         value1, value2 = rest, None
+        value1 = evaluate(value1, env)
+
     if is_list(value1):
         value1 = evaluate(value1, env)
+
     if is_list(value2):
         value2 = evaluate(value2, env)
 
