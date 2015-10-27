@@ -14,6 +14,8 @@ in a day, after all.)
 """
 
 def evaluate(ast, env):
+    print("env")
+    print(env.bindings)
 
     if not is_list(ast):
         if is_boolean(ast):
@@ -45,17 +47,27 @@ def evaluate(ast, env):
 
     if is_closure(key):
         closure = key
-        if len(key.params) == 0:
-            return evaluate(key.body, env)
+        if len(closure.params) == 0:
+            return evaluate(closure.body, closure.env)
         else:
             arguments = rest
+            if not is_list(arguments):
+                arguments = [arguments]
+
             if not len(arguments) == len(closure.params):
-                arguments = evaluate(arguments, env)
+                arguments = evaluate(arguments, closure.env)
+
+            if not is_list(arguments):
+                arguments = [arguments]
 
             if len(arguments) == len(closure.params):
                 new_env = {}
                 for i in range(len(closure.params)):
                     new_env[closure.params[i]] = arguments[i]
+
+                print(new_env)
+
+                print("eval clos")
 
                 return evaluate(closure.body, closure.env.extend(new_env))
             else:
@@ -71,6 +83,7 @@ def evaluate(ast, env):
             return False if is_list(res) else True
         else:
             return True
+
     elif key == "lambda":
         if not len(rest) == 2:
             raise LispError("number of arguments")
@@ -80,19 +93,12 @@ def evaluate(ast, env):
 
     if is_list(rest) and len(rest) == 2:
         value1, value2 = rest
-        value1 = evaluate(value1, env)
-        value2 = evaluate(value2, env)
     else:
         value1, value2 = rest, None
-        value1 = evaluate(value1, env)
 
-    if is_list(value1):
-        value1 = evaluate(value1, env)
-
-    if is_list(value2):
-        value2 = evaluate(value2, env)
 
     if key == 'eq':
+        value1, value2 = evaluate(value1, env), evaluate(value2, env)
         if is_list(value1) or is_list(value2):
             return False
         return value1 == value2
@@ -100,7 +106,7 @@ def evaluate(ast, env):
     elif key == "define":
         if value2:
             if isinstance(value1, str):
-                env.set(value1, value2)
+                return env.set(value1, evaluate(value2, env))
             else:
                 raise LispError("non-symbol")
         else:
@@ -108,36 +114,42 @@ def evaluate(ast, env):
 
 
     if key == '+':
+        value1, value2 = evaluate(value1, env), evaluate(value2, env)
         if is_integer(value1) and is_integer(value2):
             return value1 + value2
         else:
             raise LispError
 
     if key == '-':
+        value1, value2 = evaluate(value1, env), evaluate(value2, env)
         if is_integer(value1) and is_integer(value2):
             return value1 - value2
         else:
             raise LispError
 
     if key == '/':
+        value1, value2 = evaluate(value1, env), evaluate(value2, env)
         if is_integer(value1) and is_integer(value2):
             return value1 // value2
         else:
             raise LispError
 
     if key == '*':
+        value1, value2 = evaluate(value1, env), evaluate(value2, env)
         if is_integer(value1) and is_integer(value2):
             return value1 * value2
         else:
             raise LispError
 
     if key == 'mod':
+        value1, value2 = evaluate(value1, env), evaluate(value2, env)
         if is_integer(value1) and is_integer(value2):
             return value1 % value2
         else:
             raise LispError
 
     if key == '>':
+        value1, value2 = evaluate(value1, env), evaluate(value2, env)
         if is_integer(value1) and is_integer(value2):
             return value1 > value2
         else:
@@ -154,6 +166,9 @@ def evaluate(ast, env):
         else:
             raise LispError
 
+    res = evaluate(key, env)
+    if not is_closure(res):
+        return ast
 
-
+    return evaluate([res, rest],env)
 

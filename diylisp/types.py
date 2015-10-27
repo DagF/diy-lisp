@@ -32,7 +32,7 @@ class Environment:
 
     def lookup(self, symbol):
         var = self.bindings.get(symbol)
-        if var:
+        if var is not None:
             return var
         else:
             raise LispError(symbol)
