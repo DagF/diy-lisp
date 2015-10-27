@@ -27,13 +27,7 @@ def evaluate(ast, env):
 
 
 
-    if len(ast) > 2:
-        key, *rest = ast
-    elif len(ast) == 2:
-        key, rest = ast
-    else:
-        key = ast[0]
-        rest = None
+    key, *rest = ast
 
 
     print(ast)
@@ -51,19 +45,18 @@ def evaluate(ast, env):
             return evaluate(closure.body, closure.env)
         else:
             arguments = rest
-            if not is_list(arguments):
-                arguments = [arguments]
 
-            if not len(arguments) == len(closure.params):
-                arguments = evaluate(arguments, closure.env)
+            arg = []
+            for argument in arguments:
+                arg.append(evaluate(argument, env))
 
-            if not is_list(arguments):
-                arguments = [arguments]
 
-            if len(arguments) == len(closure.params):
+
+
+            if len(arg) == len(closure.params):
                 new_env = {}
                 for i in range(len(closure.params)):
-                    new_env[closure.params[i]] = arguments[i]
+                    new_env[closure.params[i]] = evaluate(arg[i],env)
 
                 print(new_env)
 
@@ -71,15 +64,21 @@ def evaluate(ast, env):
 
                 return evaluate(closure.body, closure.env.extend(new_env))
             else:
-                raise LispError
+                raise LispError("wrong number of arguments, expected %d got %d" % len(closure.params), len(arguments))
 
 
 
     if key == 'quote':
-        return rest
+        if len(rest) == 1:
+            return rest[0]
+        else:
+            raise LispError
+
     elif key == 'atom':
-        if is_list(rest):
+        rest = rest[0]
+        if is_list(rest) and len(rest) > 1:
             res = evaluate(rest, env)
+            print(res)
             return False if is_list(res) else True
         else:
             return True
@@ -89,7 +88,6 @@ def evaluate(ast, env):
             raise LispError("number of arguments")
         params, body = rest
         return Closure(env,params,body)
-        #return evaluate(fun.body, env)
 
     if is_list(rest) and len(rest) == 2:
         value1, value2 = rest
@@ -166,9 +164,12 @@ def evaluate(ast, env):
         else:
             raise LispError
 
+
     res = evaluate(key, env)
+
     if not is_closure(res):
-        return ast
+        raise LispError("not a function")
+
 
     return evaluate([res, rest],env)
 
