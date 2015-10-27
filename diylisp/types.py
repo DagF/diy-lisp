@@ -43,6 +43,7 @@ class Environment:
         return new_env
 
     def set(self, symbol, value):
+
         if not self.bindings.get(symbol):
             self.bindings[symbol] = value
         else:
